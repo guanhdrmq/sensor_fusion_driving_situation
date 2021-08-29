@@ -26,5 +26,7 @@ Deep Learning for Safe Autonomous Driving: Current Challenges and Future Directi
 
 Enabling Safe Autonomous Driving in Real-World City Traffic Using Multiple Criteria Decision Making
 
-
+# TODO
+1 The accuracy is still around 0.5. so we need to review the architecture.
+2 Generate more high quality data.
 
