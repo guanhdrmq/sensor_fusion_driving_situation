@@ -1,6 +1,11 @@
 # Sensor_fusion_driving_situation
 left and right camera with voice commands sensor fusion to detect driving situations
 
+# Senfor fusion
+Two VGG16 parallel for image feature extraction and VGGish for audio feature extraction.
+
+Then merge features to detect safe and unsafe stiuation. See driving scene recognition conflicts with voice commands.
+
 # Reading list
 SIEVE: Secure In-Vehicle Automatic Speech Recognition Systems
 
@@ -28,5 +33,6 @@ Enabling Safe Autonomous Driving in Real-World City Traffic Using Multiple Crite
 
 # TODO
 1 The accuracy is still around 0.5. so we need to review the architecture.
+
 2 Generate more high quality data.
 
