@@ -4,22 +4,21 @@ import librosa.display
 import numpy as np
 from keras.utils import np_utils
 
-
-config = {"classes": ["safe", "unsafe"]
+config = {"classes": ["true", "false"]
           }
 
-
-path_base = "D:/pythonProject/pythonProject/"
+# camera and audio data path
+path_base = "/Users/Wayne Guan/PycharmProjects/"
 left_camera = "camera_audio_fusion_safe/camera_audio_data/left"
 right_camera = "camera_audio_fusion_safe/camera_audio_data/right"
 voice_command = "camera_audio_fusion_safe/camera_audio_data/audio"
 
+# preprocess audio into spectram
 def preproces_audio(path):
     y, sr = librosa.load(path)
-    # print(librosa.feature.melspectrogram(y=y, sr=sr))
     return librosa.feature.melspectrogram(y=y, sr=sr)
 
-
+# load and read dataset with labels
 def load_twocamera_voicecommand():
     path_left = os.path.join(path_base, left_camera)
     left_images = list(sorted(os.listdir(path_left)))

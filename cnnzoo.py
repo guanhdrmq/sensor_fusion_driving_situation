@@ -1,9 +1,6 @@
 from keras.applications import VGG16
 from keras.models import Model, Sequential
-from keras import regularizers
-from keras.layers import Input, Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D, BatchNormalization, \
-    Concatenate
-from keras import models, layers
+from keras.layers import Dense, Dropout, Flatten, BatchNormalization, Concatenate
 from vggish_customer import VGGish_customer
 
 WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1' \
@@ -11,18 +8,23 @@ WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/downlo
 WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1' \
                       '/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5 '
 
+weights_path_no_top = './pre_trained_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
+
+# audio extraction by VGGish and return fully connected layer
 def audio_extractor():
-    conv_audio = VGGish_customer(include_top=False)
+    conv_audio = VGGish_customer()
     model = Sequential()
     model.add(conv_audio)
     model.add(Flatten())
     model.add(Dense(512, activation="relu"))
-    model.summary()
+
     return model
 
+
+# image extraction by VGG16 and return fully connected layer
 def vgg16_extractor():
-    conv_base = VGG16(weights='./pre_trained_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5',
+    conv_base = VGG16(weights=weights_path_no_top,
                       include_top=False,
                       input_shape=(224, 224, 3))
 
@@ -30,9 +32,10 @@ def vgg16_extractor():
     model.add(conv_base)
     model.add(Flatten())
     model.add(Dense(512, activation="relu"))
-    # model.summary()
     return model
 
+
+# try to merge camera and audio
 def merge_camera_voice_command():
     CNN_left = vgg16_extractor()
     CNN_right = vgg16_extractor()
