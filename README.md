@@ -42,4 +42,6 @@ Enabling Safe Autonomous Driving in Real-World City Traffic Using Multiple Crite
 2 Generate more high quality data.
 
 3 Failed to use keras callbacks for precision and recall.
+ValueError: Error when checking model : the list of Numpy arrays that you are passing to your model is not the size the model expected. Expected to see 3 array(s), but instead got the following list of 1 arrays: [array([[[[199., 206., 198.],
+
 
