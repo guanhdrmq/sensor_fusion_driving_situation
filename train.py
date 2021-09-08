@@ -1,27 +1,30 @@
 import os
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.model_selection import train_test_split, KFold
 
-# import tensorflow as tf
-# from keras.backend.tensorflow_backend import set_session
-# config = tf.ConfigProto()
-# config.gpu_options.allow_growth = True
-# set_session(tf.Session(config=config))
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-# os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+set_session(tf.Session(config=config))
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-checkpoint = ModelCheckpoint("vgg16_1.h5", monitor='val_acc', verbose=1, save_best_only=True,
-                             save_weights_only=False, mode='auto', period=1)
-early = EarlyStopping(monitor='val_acc', min_delta=0, patience=20, verbose=1, mode='auto')
+earlystopping = EarlyStopping(monitor='val_acc', mode="max", min_delta=0, patience=10, verbose=1)
 
 from dataset import load_twocamera_voicecommand
 from cnnzoo import merge_camera_voice_command
+from metrics import precision,recall,f1
+
 
 # load image and audio pairs
 (X_left_image, X_right_image, X_audios, Y) = load_twocamera_voicecommand()
 # instance of camera and voice_command fusion
 model = merge_camera_voice_command()
+
 
 # collect training history
 def show_train_history(train_history, train_metrics, validation_metrics):
@@ -42,23 +45,46 @@ def plot(history):
     plt.show()
 
 
+
 if __name__ == '__main__':
     # set training parameters
-    nb_epoch = 10
-    batch_size = 2
+    nb_epoch = 100
+    batch_size = 16
+    n_split = 10
+
     model.compile(optimizer="adam",
                   loss='categorical_crossentropy',
-                  metrics=['accuracy']
+                  metrics=['accuracy',precision,recall,f1]
                   )
 
-    # training sensor fusion
-    history = model.fit([X_left_image, X_right_image, X_audios], Y,
-                        epochs=nb_epoch,
-                        batch_size=batch_size,
-                        validation_split=0.2,
-                        verbose=1)
+    kf = KFold(n_splits=n_split, shuffle=True, random_state=None)
+    for cnt, (train, test) in enumerate(kf.split(Y)):
+        print('Training ----------- k fold: {:0>2d} ----------- '.format(cnt))
+        # training sensor fusion
+        history = model.fit([X_left_image[train], X_right_image[train], X_audios[train]], Y[train],
+                            epochs=nb_epoch,
+                            batch_size=batch_size,
+                            validation_data=([X_left_image[test], X_right_image[test], X_audios[test]], Y[test]),
+                            callbacks=[earlystopping],
+                            verbose=2)
 
-    model.save_weights('my_model_weights.h5')
-    # plot training history
-    # print(hist.history.keys())
-    plot(history)
+        # y_pred = model.predict([X_left_image[test], X_right_image[test], X_audios[test]])
+        # matrix = confusion_matrix(Y[test].argmax(axis=1), y_pred.argmax(axis=1))
+        # print(matrix)
+        model.save_weights('my_model_weights.h5')
+        # plot training history. check version print(hist.history.keys())
+        plot(history)
+        plt.show()
+
+        # evaluate the model. socres = [loss, accuracy, precision, recall,f1_score]
+        scores = model.evaluate([X_left_image[test], X_right_image[test], X_audios[test]], Y[test], verbose=0)
+        with open('./evaluation.txt', 'a+') as f:
+            print('=======Model evaluation k fold: {:0>2d}=========='.format(cnt),file=f)
+            print("val_loss:", scores[0],file=f)
+            print("val_accuracy:", scores[1],file=f)
+            print("val_precision:", scores[2],file=f)
+            print("val_recall:", scores[3],file=f)
+            print("val_F1:", scores[4],file=f)
+            print("============================================================",file=f)
+
+

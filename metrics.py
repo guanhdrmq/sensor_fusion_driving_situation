@@ -1,26 +1,38 @@
-import keras
-import numpy as np
-from sklearn.metrics import recall_score, precision_score, f1_score
+from keras import backend as K
 
-# build precision, recall and F1
-class Metrics(keras.callbacks.Callback):
-    def __init__(self, valid_data):
-        super(Metrics, self).__init__()
-        self.validation_data = valid_data
+def check_units(y_true, y_pred):
+    if y_pred.shape[1] != 1:
+      y_pred = y_pred[:,1:2]
+      y_true = y_true[:,1:2]
+    return y_true, y_pred
 
-    def on_epoch_end(self, epoch, logs=None):
-        logs = logs or {}
-        val_predict = np.argmax(self.model.predict(self.validation_data[0], self.validation_data[1]), -1)
-        val_targ = self.validation_data[2]
-        if len(val_targ.shape) == 2 and val_targ.shape[1] != 1:
-            val_targ = np.argmax(val_targ, -1)
+def precision(y_true, y_pred):
+    y_true, y_pred = check_units(y_true, y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
 
-        _val_f1 = f1_score(val_targ, val_predict, average='weighted')
-        _val_recall = recall_score(val_targ, val_predict, average='weighted')
-        _val_precision = precision_score(val_targ, val_predict, average='weighted')
+def recall(y_true, y_pred):
+    y_true, y_pred = check_units(y_true, y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
 
-        logs['val_f1'] = _val_f1
-        logs['val_recall'] = _val_recall
-        logs['val_precision'] = _val_precision
-        print(" — val_f1: %f — val_precision: %f — val_recall: %f" % (_val_f1, _val_precision, _val_recall))
-        return
+def f1(y_true, y_pred):
+    def recall(y_true, y_pred):
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+        recall = true_positives / (possible_positives + K.epsilon())
+        return recall
+
+    def precision(y_true, y_pred):
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+        precision = true_positives / (predicted_positives + K.epsilon())
+        return precision
+    y_true, y_pred = check_units(y_true, y_pred)
+    precision = precision(y_true, y_pred)
+    recall = recall(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+K.epsilon()))
