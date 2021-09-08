@@ -6,6 +6,11 @@ Two VGG16 parallel for image feature extraction and VGGish for audio feature ext
 
 Then merge features to detect safe and unsafe stiuation. See driving scene recognition conflicts with voice commands.
 
+# How to use
+You can use train.py to train the sensor fusion network. It ouputs accuracy and loss
+You can use train2.py with k-fold cross validation. It gives you 10 times of accuracy, loss, val_accuracy and val_loss.
+
+
 # Reading list
 SIEVE: Secure In-Vehicle Automatic Speech Recognition Systems
 
@@ -35,4 +40,8 @@ Enabling Safe Autonomous Driving in Real-World City Traffic Using Multiple Crite
 1 The accuracy is still around 0.5 when using 200 image-audio pairs. So we need to review the architecture.
 
 2 Generate more high quality data.
+
+3 Failed to use keras callbacks for precision and recall.
+ValueError: Error when checking model : the list of Numpy arrays that you are passing to your model is not the size the model expected. Expected to see 3 array(s), but instead got the following list of 1 arrays: [array([[[[199., 206., 198.],
+
 
