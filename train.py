@@ -2,7 +2,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, plot_confusion_matrix
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import  KFold
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
@@ -52,6 +52,10 @@ if __name__ == '__main__':
     batch_size = 16
     n_split = 10
 
+    model_save_path = 'results'
+    if not os.path.exists(model_save_path):
+        os.makedirs(model_save_path)
+
     model.compile(optimizer="adam",
                   loss='categorical_crossentropy',
                   metrics=['accuracy',precision,recall,f1]
@@ -60,21 +64,29 @@ if __name__ == '__main__':
     kf = KFold(n_splits=n_split, shuffle=True, random_state=None)
     for cnt, (train, test) in enumerate(kf.split(Y)):
         print('Training ----------- k fold: {:0>2d} ----------- '.format(cnt))
+        checkpoint = ModelCheckpoint(os.path.join(model_save_path, 'model_best_{:0>2d}.h5'.format(cnt)),
+                                     monitor='val_acc',
+                                     verbose=0,
+                                     save_weights_only=False,
+                                     save_best_only=True,
+                                     mode='auto',
+                                     period=1)
         # training sensor fusion
         history = model.fit([X_left_image[train], X_right_image[train], X_audios[train]], Y[train],
                             epochs=nb_epoch,
                             batch_size=batch_size,
                             validation_data=([X_left_image[test], X_right_image[test], X_audios[test]], Y[test]),
-                            callbacks=[earlystopping],
+                            callbacks=[checkpoint, earlystopping],
                             verbose=2)
 
         # y_pred = model.predict([X_left_image[test], X_right_image[test], X_audios[test]])
         # matrix = confusion_matrix(Y[test].argmax(axis=1), y_pred.argmax(axis=1))
         # print(matrix)
-        model.save_weights('my_model_weights.h5')
+
         # plot training history. check version print(hist.history.keys())
         plot(history)
         plt.show()
+
 
         # evaluate the model. socres = [loss, accuracy, precision, recall,f1_score]
         scores = model.evaluate([X_left_image[test], X_right_image[test], X_audios[test]], Y[test], verbose=0)
