@@ -20,11 +20,10 @@ earlystopping = EarlyStopping(monitor='val_acc', mode="max", min_delta=0, patien
 from dataset import load_twocamera_voicecommand
 from cnnzoo import merge_camera_voice_command
 from metrics import precision,recall,f1
-
+from triple_loss import triplet_loss_adapted_from_tf
 
 # load image and audio pairs
 (X_left_image, X_right_image, X_audios, Y) = load_twocamera_voicecommand()
-
 
 
 # collect training history
@@ -46,13 +45,14 @@ def plot(history):
     plt.show()
 
 def build_model():
-    # 清除之前的模型，省得压满内存
+    # 清除之前的模型，省得压满内存 release memory
     K.clear_session()
     # instance of camera and voice_command fusion
     model = merge_camera_voice_command()
 
     model.compile(optimizer="adam",
-                  loss='categorical_crossentropy',
+                  #loss='categorical_crossentropy',
+                  loss=triplet_loss_adapted_from_tf,
                   metrics=['accuracy', precision, recall, f1]
                   )
     return model
@@ -94,13 +94,13 @@ if __name__ == '__main__':
         # matrix = confusion_matrix(Y[test].argmax(axis=1), y_pred.argmax(axis=1))
         # print(matrix)
 
-        # plot training history. check version print(hist.history.keys())
+        # plot training history. check version print(hist .history.keys())
         plot(history)
         plt.show()
 
         # evaluate the model. socres = [loss, accuracy, precision, recall,f1_score]
         scores = model.evaluate([X_left_image[test], X_right_image[test], X_audios[test]], Y[test], verbose = 0)
-        with open('./evaluation.txt', 'a+') as f:
+        with open('evaluation.txt', 'a+') as f:
             print('==========Model evaluation k fold: {:0>2d}=========='.format(cnt),file=f)
             print("val_loss:", scores[0],file=f)
             print("val_accuracy:", scores[1],file=f)
