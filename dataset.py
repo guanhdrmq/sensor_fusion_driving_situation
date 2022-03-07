@@ -4,21 +4,21 @@ import librosa.display
 import numpy as np
 from keras.utils import np_utils
 
-config = {"classes": ["true", "false"]
+
+config = {"classes": ["safe", "unsafe"]
           }
 
-# camera and audio data path
-path_base = "/Users/Wayne Guan/PycharmProjects/"
+path_base = "D:/pythonProject/pythonProject/"
 left_camera = "camera_audio_fusion_safe/camera_audio_data/left"
 right_camera = "camera_audio_fusion_safe/camera_audio_data/right"
 voice_command = "camera_audio_fusion_safe/camera_audio_data/audio"
 
-# preprocess audio into spectram
 def preproces_audio(path):
     y, sr = librosa.load(path)
-    return librosa.feature.melspectrogram(y=y, sr=sr)
+    return librosa.feature.mfcc(y=y, sr=sr, n_mfcc=24)
+    #return librosa.feature.melspectrogram(y=y, sr=sr)
 
-# load and read dataset with labels
+
 def load_twocamera_voicecommand():
     path_left = os.path.join(path_base, left_camera)
     left_images = list(sorted(os.listdir(path_left)))
@@ -32,6 +32,7 @@ def load_twocamera_voicecommand():
     audios = list(sorted(os.listdir(path_voicecommand)))
     audios = [p for p in audios if p.endswith('wav')]
 
+    print(len(left_images), len(right_images), len(audios))
     assert len(left_images) == len(right_images) == len(audios)
 
     # Containers for the data
@@ -73,8 +74,8 @@ def load_twocamera_voicecommand():
     X_audios = np.array(X_audios, dtype=np.float32)
     Y = np.array(Y, dtype=np.int)
     Y = np_utils.to_categorical(Y, 2)
-    X_audios[np.isinf(X_audios)] = 0
-    X_audios[np.isnan(X_audios)] = 0
+    # X_audios[np.isinf(X_audios)] = 0
+    # X_audios[np.isnan(X_audios)] = 0
 
     return X_left_image, X_right_image, X_audios, Y
 

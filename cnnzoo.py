@@ -1,41 +1,30 @@
-from keras.applications import VGG16
 from keras.models import Model, Sequential
 from keras.layers import Dense, Dropout, Flatten, BatchNormalization, Concatenate
-from vggish_customer import VGGish_customer
+from VGGish_customer import VGGish
+from VGG16_customer import VGG16
 
-WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1' \
-               '/vgg16_weights_tf_dim_ordering_tf_kernels.h5 '
-WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1' \
-                      '/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5 '
+# WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1' \
+#                '/vgg16_weights_tf_dim_ordering_tf_kernels.h5 '
+# WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1' \
+#                       '/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5 '
 
-weights_path_no_top = './pre_trained_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
-
-
-# audio extraction by VGGish and return fully connected layer
+mc = True
 def audio_extractor():
-    conv_audio = VGGish_customer()
+    conv_audio = VGGish(include_top=False, mc=True)
     model = Sequential()
     model.add(conv_audio)
     model.add(Flatten())
     model.add(Dense(512, activation="relu"))
-
     return model
 
-
-# image extraction by VGG16 and return fully connected layer
 def vgg16_extractor():
-    conv_base = VGG16(weights=weights_path_no_top,
-                      include_top=False,
-                      input_shape=(224, 224, 3))
-
+    conv_image = VGG16(include_top=False, mc=True)
     model = Sequential()
-    model.add(conv_base)
+    model.add(conv_image)
     model.add(Flatten())
     model.add(Dense(512, activation="relu"))
     return model
 
-
-# try to merge camera and audio
 def merge_camera_voice_command():
     CNN_left = vgg16_extractor()
     CNN_right = vgg16_extractor()
@@ -44,7 +33,7 @@ def merge_camera_voice_command():
     for layer in CNN_left.get_layer("vgg16").layers:
         layer._name = "left_" + layer.name
     for layer in CNN_right.get_layer("vgg16").layers:
-        layer._name = "left_" + layer.name
+        layer._name = "right_" + layer.name
 
     for layer in CNN_left.layers:
         layer.name = "left_" + layer.name
